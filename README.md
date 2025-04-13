@@ -1,38 +1,30 @@
+from fastapi import FastAPI, Form
+from fastapi.middleware.cors import CORSMiddleware
 import openai
 
-openai.api_key = "YOUR_API_KEY"
+openai.api_key = "YOUR_OPENAI_API_KEY"  # استبدله بمفتاحك
 
-def chat_with_ai(prompt):
+app = FastAPI()
+
+# للسماح للواجهة بالتواصل مع الخادم
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # عدلها لاحقاً لأمان أكثر
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.post("/chat/")
+async def chat(prompt: str = Form(...)):
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}]
+        model="gpt-3.5-turbo",  # أو "gpt-4" إن توفر
+        messages=[
+            {"role": "system", "content": "أنت مساعد ذكي يساعد المستخدمين بالعربية والإنجليزية."},
+            {"role": "user", "content": prompt}
+        ]
     )
-    return response['choices'][0]['message']['content']
-
-# مثال
-user_input = input("اكتب سؤالك: ")
-print(chat_with_ai(user_input))
-npm install firebase
-// auth.js
-import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-
-const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  // ...
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// تسجيل مستخدم جديد
-function signUp(email, password) {
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(userCredential => console.log("تم التسجيل:", userCredential.user))
-    .catch(error => console.error("خطأ:", error.message));
-<!-- Tailwind Dark Mode Toggle -->
-<button onclick="document.documentElement.classList.toggle('dark')">
-  تبديل الوضع
-</button>
-
+    reply = response['choices'][0]['message']['content']
+    return {"response": reply}
+uvicorn main:app --reload
+curl -X POST -F "prompt=ما هو الذكاء الاصطناعي؟" http://localhost:8000/chat/
